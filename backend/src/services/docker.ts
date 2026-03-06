@@ -66,15 +66,15 @@ export async function getContainerStats(
   if (!res.ok) return null;
   const stats = (await res.json()) as any;
 
-  // CPU % calculation
+  // CPU % calculation — percentage of total system CPU (0–100%)
   const cpuDelta =
     stats.cpu_stats.cpu_usage.total_usage -
     stats.precpu_stats.cpu_usage.total_usage;
   const systemDelta =
     stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage;
-  const numCpus = stats.cpu_stats.online_cpus ?? 1;
-  const cpuPercent =
-    systemDelta > 0 ? (cpuDelta / systemDelta) * numCpus * 100 : 0;
+  // system_cpu_usage is cumulative across ALL cores, so dividing directly
+  // gives the fraction of total system capacity (no need to multiply by numCpus)
+  const cpuPercent = systemDelta > 0 ? (cpuDelta / systemDelta) * 100 : 0;
 
   // Memory
   const memUsage = stats.memory_stats.usage ?? 0;
