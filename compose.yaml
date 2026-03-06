@@ -1,0 +1,56 @@
+services:
+  # ============================================
+  # Elysia Backend (Bun)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: palworld-web-manage-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Palworld server REST API connection
+      - PALWORLD_API_HOST=${PALWORLD_API_HOST:-palworld-server}
+      - PALWORLD_API_PORT=${PALWORLD_API_PORT:-8212}
+      - PALWORLD_API_USER=${PALWORLD_API_USER:-admin}
+      - PALWORLD_API_PASSWORD=${PALWORLD_API_PASSWORD:-}
+      # Path inside the container where PalWorldSettings.ini is mounted
+      - SETTINGS_PATH=/app/palworld-saved/Config/LinuxServer/PalWorldSettings.ini
+      - PORT=3000
+      # Docker container name of the palworld game server (for start/restart)
+      - PALWORLD_CONTAINER_NAME=${PALWORLD_CONTAINER_NAME:-palworld-server}
+      # JWT / Refresh token configuration
+      - JWT_SECRET=${JWT_SECRET:-}
+      - JWT_EXPIRY=${JWT_EXPIRY:-30m}
+      - REFRESH_EXPIRY=${REFRESH_EXPIRY:-7d}
+      - COOKIE_EXPIRY=${COOKIE_EXPIRY:-7d}
+    volumes:
+      # Mount the Palworld server's Saved directory
+      # Adjust the host path to match your palworld server's Saved directory
+      - ${PALWORLD_SAVED_PATH:-../compose/Saved}:/app/palworld-saved
+      # Mount Docker socket for container start/stop/restart
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - palworld-web-manage
+
+  # ============================================
+  # Vue Frontend (Nginx)
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: palworld-web-manage-frontend
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - backend
+    networks:
+      - palworld-web-manage
+
+networks:
+  palworld-web-manage:
+    driver: bridge
