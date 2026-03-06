@@ -18,6 +18,39 @@
         </div>
       </div>
       <div class="stat-card">
+        <div class="stat-label">CPU Usage</div>
+        <div class="stat-value">
+          {{ containerStats ? containerStats.cpuPercent + "%" : "--" }}
+        </div>
+        <div v-if="containerStats" class="usage-bar">
+          <div
+            class="usage-fill"
+            :class="cpuBarColor"
+            :style="{ width: Math.min(containerStats.cpuPercent, 100) + '%' }"
+          ></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">RAM Usage</div>
+        <div class="stat-value">
+          {{ containerStats ? formatMB(containerStats.memoryUsageMB) : "--" }}
+          <span
+            v-if="containerStats"
+            style="font-size: 14px; color: var(--text-secondary)"
+            >/ {{ formatMB(containerStats.memoryLimitMB) }}</span
+          >
+        </div>
+        <div v-if="containerStats" class="usage-bar">
+          <div
+            class="usage-fill"
+            :class="ramBarColor"
+            :style="{
+              width: Math.min(containerStats.memoryPercent, 100) + '%',
+            }"
+          ></div>
+        </div>
+      </div>
+      <div class="stat-card">
         <div class="stat-label">Server FPS</div>
         <div class="stat-value">{{ metrics?.serverfps ?? "--" }}</div>
       </div>
@@ -115,19 +148,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import {
   getServerInfo,
   getMetrics,
   getPlayers,
   getContainerStatus,
+  getContainerStats,
 } from "@/composables/api";
 
 const info = ref<any>(null);
 const metrics = ref<any>(null);
 const players = ref<any[]>([]);
 const containerState = ref<string>("");
+const containerStats = ref<any>(null);
 const error = ref("");
+
+const cpuBarColor = computed(() => {
+  const v = containerStats.value?.cpuPercent ?? 0;
+  if (v >= 90) return "bar-danger";
+  if (v >= 70) return "bar-warning";
+  return "bar-ok";
+});
+
+const ramBarColor = computed(() => {
+  const v = containerStats.value?.memoryPercent ?? 0;
+  if (v >= 90) return "bar-danger";
+  if (v >= 70) return "bar-warning";
+  return "bar-ok";
+});
+
+function formatMB(mb: number): string {
+  if (mb >= 1024) return (mb / 1024).toFixed(1) + " GB";
+  return Math.round(mb) + " MB";
+}
 let interval: ReturnType<typeof setInterval>;
 
 function formatUptime(seconds?: number): string {
@@ -140,17 +194,21 @@ function formatUptime(seconds?: number): string {
 
 async function loadData() {
   try {
-    const [infoRes, metricsRes, playersRes, containerRes] = await Promise.all([
-      getServerInfo(),
-      getMetrics(),
-      getPlayers(),
-      getContainerStatus(),
-    ]);
+    const [infoRes, metricsRes, playersRes, containerRes, statsRes] =
+      await Promise.all([
+        getServerInfo(),
+        getMetrics(),
+        getPlayers(),
+        getContainerStatus(),
+        getContainerStats(),
+      ]);
     if (infoRes.success) info.value = infoRes.data;
     if (metricsRes.success) metrics.value = metricsRes.data;
     if (playersRes.success) players.value = playersRes.data?.players || [];
     if (containerRes.success)
       containerState.value = containerRes.data?.state || "";
+    if (statsRes.success) containerStats.value = statsRes.data;
+    else containerStats.value = null;
     error.value = "";
   } catch (e: any) {
     error.value = "Failed to connect to server: " + e.message;
@@ -185,6 +243,32 @@ onUnmounted(() => {
 .status-dot.offline {
   background: var(--danger);
   box-shadow: 0 0 6px var(--danger);
+}
+
+.usage-bar {
+  margin-top: 8px;
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.usage-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.usage-fill.bar-ok {
+  background: var(--success);
+}
+
+.usage-fill.bar-warning {
+  background: var(--warning);
+}
+
+.usage-fill.bar-danger {
+  background: var(--danger);
 }
 
 .info-grid {

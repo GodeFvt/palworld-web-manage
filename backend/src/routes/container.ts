@@ -9,6 +9,7 @@ import {
   findContainerId,
   dockerPost,
   getContainerState,
+  getContainerStats,
 } from "../services/docker";
 import { palworldFetch } from "../services/palworld-api";
 
@@ -25,6 +26,27 @@ export const containerRoutes = new Elysia()
         };
       const state = await getContainerState();
       return { success: true, data: { containerId: id, state } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  })
+
+  // GET container resource stats (CPU & RAM)
+  .get("/api/container/stats", async () => {
+    try {
+      const id = await findContainerId();
+      if (!id)
+        return {
+          success: false,
+          error: `Container '${PALWORLD_CONTAINER_NAME}' not found`,
+        };
+      const stats = await getContainerStats(id);
+      if (!stats)
+        return {
+          success: false,
+          error: "Could not retrieve container stats (is it running?)",
+        };
+      return { success: true, data: stats };
     } catch (e: any) {
       return { success: false, error: e.message };
     }

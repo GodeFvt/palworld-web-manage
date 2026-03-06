@@ -110,6 +110,7 @@ export const forceStopServer = () =>
 
 // Docker container management
 export const getContainerStatus = () => fetchApi("/container/status");
+export const getContainerStats = () => fetchApi("/container/stats");
 export const startServer = () =>
   fetchApi("/container/start", { method: "POST" });
 export const restartServer = (waittime?: number, message?: string) =>

@@ -49,3 +49,45 @@ export async function getContainerState(): Promise<string | null> {
   const info = (await res.json()) as any;
   return info?.State?.Status ?? null;
 }
+
+export interface ContainerStats {
+  cpuPercent: number;
+  memoryUsageMB: number;
+  memoryLimitMB: number;
+  memoryPercent: number;
+}
+
+/** Get CPU & memory stats for a container (one-shot, non-streaming). */
+export async function getContainerStats(
+  containerId: string,
+): Promise<ContainerStats | null> {
+  const url = `http://localhost/containers/${containerId}/stats?stream=false`;
+  const res = await fetch(url, { unix: DOCKER_SOCKET } as any);
+  if (!res.ok) return null;
+  const stats = (await res.json()) as any;
+
+  // CPU % calculation
+  const cpuDelta =
+    stats.cpu_stats.cpu_usage.total_usage -
+    stats.precpu_stats.cpu_usage.total_usage;
+  const systemDelta =
+    stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage;
+  const numCpus = stats.cpu_stats.online_cpus ?? 1;
+  const cpuPercent =
+    systemDelta > 0 ? (cpuDelta / systemDelta) * numCpus * 100 : 0;
+
+  // Memory
+  const memUsage = stats.memory_stats.usage ?? 0;
+  const memCache = stats.memory_stats.stats?.cache ?? 0;
+  const memoryUsageMB = (memUsage - memCache) / (1024 * 1024);
+  const memoryLimitMB = (stats.memory_stats.limit ?? 0) / (1024 * 1024);
+  const memoryPercent =
+    memoryLimitMB > 0 ? (memoryUsageMB / memoryLimitMB) * 100 : 0;
+
+  return {
+    cpuPercent: Math.round(cpuPercent * 100) / 100,
+    memoryUsageMB: Math.round(memoryUsageMB),
+    memoryLimitMB: Math.round(memoryLimitMB),
+    memoryPercent: Math.round(memoryPercent * 100) / 100,
+  };
+}
