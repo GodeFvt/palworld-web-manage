@@ -34,8 +34,20 @@ palworld-web-manage/
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── src/
-│       ├── index.ts              # Elysia server — API routes, auth, Docker helpers
-│       └── settings-parser.ts    # INI parser, schema, serializer, validator
+│       ├── index.ts              # Entry point — wires plugins & routes
+│       ├── config.ts             # Environment variables & constants
+│       ├── utils.ts              # Utility functions (duration parser, sleep)
+│       ├── settings-parser.ts    # INI parser, schema, serializer, validator
+│       ├── middleware/
+│       │   └── auth-guard.ts     # JWT auth guard (protects non-public routes)
+│       ├── routes/
+│       │   ├── auth.ts           # /api/auth/* — login, logout, me, refresh
+│       │   ├── settings.ts       # /api/config, /api/settings-schema
+│       │   ├── palworld.ts       # /api/palworld/* — REST API proxy
+│       │   └── container.ts      # /api/container/* — Docker management
+│       └── services/
+│           ├── docker.ts         # Docker Engine API helpers (Unix socket)
+│           └── palworld-api.ts   # Palworld REST API client
 └── frontend/
     ├── Dockerfile        # Node build → Nginx serve
     ├── package.json
