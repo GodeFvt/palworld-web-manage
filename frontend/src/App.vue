@@ -181,8 +181,14 @@ body {
 .content {
   flex: 1;
   margin-left: 240px;
-  padding: 32px;
-  max-width: 1200px;
+  padding: 32px 48px;
+  width: calc(100% - 240px);
+}
+
+.content > * {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Shared component styles */
@@ -211,7 +217,7 @@ body {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -519,6 +525,7 @@ select.input {
   .content {
     margin-left: 60px;
     padding: 16px;
+    width: calc(100% - 60px);
   }
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
