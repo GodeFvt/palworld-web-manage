@@ -59,12 +59,13 @@
         @click="doStart"
         :disabled="starting || containerState === 'running'"
       >
+        <Play v-if="!starting && containerState !== 'running'" :size="14" />
         {{
           starting
             ? "Starting..."
             : containerState === "running"
               ? "Already Running"
-              : "▶ Start Server"
+              : "Start Server"
         }}
       </button>
     </div>
@@ -110,7 +111,8 @@
           @click="doRestart"
           :disabled="restarting"
         >
-          {{ restarting ? "Restarting..." : "🔄 Restart Server" }}
+          <RefreshCw v-if="!restarting" :size="14" />
+          {{ restarting ? "Restarting..." : "Restart Server" }}
         </button>
       </div>
       <!-- Restart progress steps -->
@@ -137,7 +139,9 @@
       >
         Force save the current world state.
       </p>
-      <button class="btn btn-success" @click="doSave">💾 Save World</button>
+      <button class="btn btn-success" @click="doSave">
+        <Save :size="14" /> Save World
+      </button>
     </div>
 
     <!-- Announce -->
@@ -197,7 +201,9 @@
             placeholder="Server shutting down..."
           />
         </div>
-        <button class="btn btn-warning" @click="doShutdown">⏻ Shutdown</button>
+        <button class="btn btn-warning" @click="doShutdown">
+          <Power :size="14" /> Shutdown
+        </button>
       </div>
     </div>
 
@@ -232,7 +238,7 @@
           @click="doForceStop"
           :disabled="!forceStopConfirm"
         >
-          ⚠ Force Stop
+          <AlertTriangle :size="14" /> Force Stop
         </button>
       </div>
     </div>
@@ -251,6 +257,7 @@ import {
   startServer,
   restartServer,
 } from "@/composables/api";
+import { Play, RefreshCw, Save, Power, AlertTriangle } from "lucide-vue-next";
 
 const metrics = ref<any>(null);
 const containerState = ref<string | null>(null);
@@ -333,7 +340,7 @@ async function doRestart() {
   )
     return;
   restarting.value = true;
-  restartSteps.value = ["⏳ Starting restart sequence..."];
+  restartSteps.value = ["Starting restart sequence..."];
   try {
     const res = await restartServer(
       restartWait.value,
@@ -349,7 +356,7 @@ async function doRestart() {
     }
   } catch (e: any) {
     showMessage("Error: " + e.message, "error");
-    restartSteps.value.push(`❌ Error: ${e.message}`);
+    restartSteps.value.push(`[ERROR] ${e.message}`);
   }
   restarting.value = false;
   refreshAll();

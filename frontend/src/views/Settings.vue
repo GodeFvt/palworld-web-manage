@@ -188,7 +188,7 @@
         <!-- Save button -->
         <div class="settings-actions">
           <button class="btn btn-success" @click="saveFormSettings">
-            💾 Save Settings
+            <Save :size="14" /> Save Settings
           </button>
         </div>
       </template>
@@ -221,7 +221,7 @@
         ></textarea>
         <div style="margin-top: 12px; display: flex; gap: 8px">
           <button class="btn btn-success" @click="saveRawContent">
-            💾 Save Raw Settings
+            <Save :size="14" /> Save Raw Settings
           </button>
           <button class="btn btn-primary" @click="loadConfig">Reload</button>
           <div style="flex: 1" />
@@ -230,7 +230,7 @@
             @click="copyRaw"
             title="Copy to clipboard"
           >
-            📋 Copy
+            <ClipboardCopy :size="14" /> Copy
           </button>
         </div>
       </div>
@@ -288,6 +288,7 @@ import {
   getSettingsSchema,
   getServerSettings,
 } from "@/composables/api";
+import { Save, ClipboardCopy } from "lucide-vue-next";
 
 const CATEGORIES = [
   "Server Settings",

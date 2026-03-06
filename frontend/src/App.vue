@@ -19,36 +19,36 @@
             active-class="active"
             exact-active-class="active"
           >
-            <span class="nav-icon">&#9776;</span>
+            <LayoutDashboard class="nav-icon" :size="18" />
             <span class="nav-text">Dashboard</span>
           </router-link>
         </li>
         <li>
           <router-link to="/players" class="nav-link" active-class="active">
-            <span class="nav-icon">&#9823;</span>
+            <Users class="nav-icon" :size="18" />
             <span class="nav-text">Players</span>
           </router-link>
         </li>
         <li>
           <router-link to="/settings" class="nav-link" active-class="active">
-            <span class="nav-icon">&#9881;</span>
+            <SettingsIcon class="nav-icon" :size="18" />
             <span class="nav-text">Settings</span>
           </router-link>
         </li>
         <li>
           <router-link to="/server" class="nav-link" active-class="active">
-            <span class="nav-icon">&#9654;</span>
+            <Server class="nav-icon" :size="18" />
             <span class="nav-text">Server Control</span>
           </router-link>
         </li>
       </ul>
       <div class="sidebar-footer">
         <div class="user-info">
-          <span class="user-icon">&#9679;</span>
+          <CircleUser class="user-icon" :size="16" />
           <span class="user-name">{{ currentUser || "admin" }}</span>
         </div>
         <button class="logout-btn" @click="handleLogout" title="Logout">
-          &#10148;
+          <LogOut :size="14" />
         </button>
       </div>
     </nav>
@@ -62,6 +62,14 @@
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuth } from "@/composables/auth";
+import {
+  LayoutDashboard,
+  Users,
+  Settings as SettingsIcon,
+  Server,
+  CircleUser,
+  LogOut,
+} from "lucide-vue-next";
 
 const route = useRoute();
 const router = useRouter();
@@ -173,9 +181,9 @@ body {
 }
 
 .nav-icon {
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .content {
@@ -474,7 +482,7 @@ select.input {
 
 .user-icon {
   color: var(--success);
-  font-size: 10px;
+  flex-shrink: 0;
 }
 
 .user-name {
@@ -499,7 +507,6 @@ select.input {
   justify-content: center;
   flex-shrink: 0;
   transition: all 0.2s;
-  transform: rotate(180deg);
 }
 
 .logout-btn:hover {
