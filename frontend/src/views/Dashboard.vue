@@ -6,19 +6,39 @@
 
     <div class="stats-grid">
       <div class="stat-card">
+        <div class="stat-label">Container</div>
+        <div class="stat-value">
+          <span
+            :class="[
+              'status-dot',
+              containerState === 'running' ? 'online' : 'offline',
+            ]"
+          ></span>
+          {{ containerState || "--" }}
+        </div>
+      </div>
+      <div class="stat-card">
         <div class="stat-label">Server FPS</div>
-        <div class="stat-value">{{ metrics?.serverfps ?? '--' }}</div>
+        <div class="stat-value">{{ metrics?.serverfps ?? "--" }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Players Online</div>
         <div class="stat-value">
-          {{ metrics?.currentplayernum ?? '--' }}
-          <span style="font-size:14px;color:var(--text-secondary)">/ {{ metrics?.maxplayernum ?? '--' }}</span>
+          {{ metrics?.currentplayernum ?? "--" }}
+          <span style="font-size: 14px; color: var(--text-secondary)"
+            >/ {{ metrics?.maxplayernum ?? "--" }}</span
+          >
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Frame Time</div>
-        <div class="stat-value">{{ metrics?.serverframetime ? metrics.serverframetime.toFixed(1) + 'ms' : '--' }}</div>
+        <div class="stat-value">
+          {{
+            metrics?.serverframetime
+              ? metrics.serverframetime.toFixed(1) + "ms"
+              : "--"
+          }}
+        </div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Uptime</div>
@@ -26,11 +46,11 @@
       </div>
       <div class="stat-card">
         <div class="stat-label">Base Camps</div>
-        <div class="stat-value">{{ metrics?.basecampnum ?? '--' }}</div>
+        <div class="stat-value">{{ metrics?.basecampnum ?? "--" }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">In-game Days</div>
-        <div class="stat-value">{{ metrics?.days ?? '--' }}</div>
+        <div class="stat-value">{{ metrics?.days ?? "--" }}</div>
       </div>
     </div>
 
@@ -47,11 +67,15 @@
         </div>
         <div class="info-row">
           <span class="info-label">Description</span>
-          <span class="info-value">{{ info.description || 'N/A' }}</span>
+          <span class="info-value">{{ info.description || "N/A" }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">World GUID</span>
-          <span class="info-value" style="font-family:monospace;font-size:12px">{{ info.worldguid }}</span>
+          <span
+            class="info-value"
+            style="font-family: monospace; font-size: 12px"
+            >{{ info.worldguid }}</span
+          >
         </div>
       </div>
       <div v-else class="loading">Loading server info...</div>
@@ -66,7 +90,6 @@
               <th>Name</th>
               <th>Level</th>
               <th>Ping</th>
-              <th>Buildings</th>
             </tr>
           </thead>
           <tbody>
@@ -77,12 +100,14 @@
               </td>
               <td>{{ p.level }}</td>
               <td>{{ p.ping?.toFixed(0) }}ms</td>
-              <td>{{ p.building_count }}</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div v-else style="color:var(--text-secondary);padding:12px 0;font-size:14px">
+      <div
+        v-else
+        style="color: var(--text-secondary); padding: 12px 0; font-size: 14px"
+      >
         No players online
       </div>
     </div>
@@ -90,50 +115,78 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { getServerInfo, getMetrics, getPlayers } from '@/composables/api'
+import { ref, onMounted, onUnmounted } from "vue";
+import {
+  getServerInfo,
+  getMetrics,
+  getPlayers,
+  getContainerStatus,
+} from "@/composables/api";
 
-const info = ref<any>(null)
-const metrics = ref<any>(null)
-const players = ref<any[]>([])
-const error = ref('')
-let interval: ReturnType<typeof setInterval>
+const info = ref<any>(null);
+const metrics = ref<any>(null);
+const players = ref<any[]>([]);
+const containerState = ref<string>("");
+const error = ref("");
+let interval: ReturnType<typeof setInterval>;
 
 function formatUptime(seconds?: number): string {
-  if (!seconds && seconds !== 0) return '--'
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  if (h > 0) return `${h}h ${m}m`
-  return `${m}m`
+  if (!seconds && seconds !== 0) return "--";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
 }
 
 async function loadData() {
   try {
-    const [infoRes, metricsRes, playersRes] = await Promise.all([
+    const [infoRes, metricsRes, playersRes, containerRes] = await Promise.all([
       getServerInfo(),
       getMetrics(),
       getPlayers(),
-    ])
-    if (infoRes.success) info.value = infoRes.data
-    if (metricsRes.success) metrics.value = metricsRes.data
-    if (playersRes.success) players.value = playersRes.data?.players || []
-    error.value = ''
+      getContainerStatus(),
+    ]);
+    if (infoRes.success) info.value = infoRes.data;
+    if (metricsRes.success) metrics.value = metricsRes.data;
+    if (playersRes.success) players.value = playersRes.data?.players || [];
+    if (containerRes.success)
+      containerState.value = containerRes.data?.state || "";
+    error.value = "";
   } catch (e: any) {
-    error.value = 'Failed to connect to server: ' + e.message
+    error.value = "Failed to connect to server: " + e.message;
   }
 }
 
 onMounted(() => {
-  loadData()
-  interval = setInterval(loadData, 10000)
-})
+  loadData();
+  interval = setInterval(loadData, 10000);
+});
 
 onUnmounted(() => {
-  clearInterval(interval)
-})
+  clearInterval(interval);
+});
 </script>
 
 <style scoped>
+.status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.status-dot.online {
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
+
+.status-dot.offline {
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger);
+}
+
 .info-grid {
   display: grid;
   gap: 12px;
