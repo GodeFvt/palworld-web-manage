@@ -101,7 +101,7 @@ For more details see the [official server guide](https://tech.palworldgame.com/)
 
 ```bash
 # You should be inside palworld-dedicated-server-docker/
-git clone https://github.com/<your-username>/palworld-web-manage.git
+git clone https://github.com/GodeFvt/palworld-web-manage.git
 cd palworld-web-manage
 ```
 
